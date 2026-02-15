@@ -15,4 +15,18 @@ The download from the IRS site comes as a ZIP file that includes:
 - An all-states file **without** AGI breakdowns
 - A Users Guide and Record Layouts doc
 
-Our chosen dataset from the selection above is the all-states file that includes AGI breakdowns (`data/22zpallagi.csv`). This one made the most sense to use because we need income bracket information to calculate generosity as a proportion of income. We think that knowing how generous someone is also requires knowing how much they made.
+Our chosen dataset from the selection above is the all-states file **without** AGI breakdowns (`data/22zpallnoagi.csv`). This one made the most sense to use because it provides pre-aggregated totals for every ZIP code, providing national-level analysis. Since our Generosity Index is calculated from the summary totals (total charity donations vs. total income per ZIP), we don't need the per-income-bracket breakdowns that the AGI version offers. The noagi file is leaner and more efficient for our use case.
+
+## Program Usage
+1. Ensure you have Python installed with the following packages: `pandas`, `matplotlib`, `seaborn`
+2. Open `gala_data_exploration.ipynb` in Jupyter Notebook (or any compatible environment like VS Code)
+3. Run all cells from top to bottom
+
+The notebook will:
+- Load the IRS ZIP code tax data from `data/original/22zpallnoagi.csv`
+- Clean and filter the data to neighborhood-level summary rows
+- Calculate a **Generosity Index** and **Participation Rate** for each ZIP code
+- Export the filtered results to `data/updated_gala_list.csv`
+- Generate two visualizations saved to the `images/` folder:
+  - `generosity_rankings.png` — Top 10 most generous ZIP codes
+  - `hidden_gems_map.png` — Scatter plot of generosity vs. income to find high-generosity in moderate-income neighborhoods
