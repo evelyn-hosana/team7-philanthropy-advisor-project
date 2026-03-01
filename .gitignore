@@ -1,0 +1,15 @@
+# Virtual environments
+.venv/
+
+# Original data (too large for git to store)
+data/original/22zpallagi.csv
+
+# Python cache & compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# macOS
+.DS_Store

@@ -1,0 +1,12 @@
+[project]
+name = "team7-philanthropy-advisor-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "altair>=6.0.0",
+    "numpy>=2.4.2",
+    "pandas>=2.3.3",
+    "streamlit>=1.54.0",
+]
