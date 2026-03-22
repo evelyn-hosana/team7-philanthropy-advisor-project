@@ -8,5 +8,8 @@ dependencies = [
     "altair>=6.0.0",
     "numpy>=2.4.2",
     "pandas>=2.3.3",
-    "streamlit>=1.54.0",
+"streamlit>=1.54.0",
+    "vegafusion>=2.0.3",
+    "vl-convert-python>=1.9.0.post1",
+    "xlrd>=2.0.2",
 ]

@@ -2,7 +2,7 @@
 .venv/
 
 # Original data (too large for git to store)
-data/original/22zpallagi.csv
+data/original/
 
 # Python cache & compiled files
 __pycache__/
