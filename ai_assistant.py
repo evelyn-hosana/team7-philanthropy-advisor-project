@@ -1,9 +1,7 @@
 import anthropic
 import streamlit as st
 
-# ---------------------------------------------------------------------------
-# SYSTEM PROMPT
-# ---------------------------------------------------------------------------
+# system prompt
 
 SYSTEM_PROMPT = """You are an AI assistant embedded in a fundraising strategy tool built for a national charity.
 The tool analyzes IRS ZIP code charitable giving data to identify the best gala invite targets.
@@ -17,25 +15,10 @@ why a cluster is valuable, or what a trend means for the charity's outreach.
 Do not speculate beyond the data provided. If a ZIP code is not in the context, say so."""
 
 
-# ---------------------------------------------------------------------------
-# CONTEXT BUILDER
-# Build a compact text summary of the current app state to pass as user context.
-# Keep it small — only pass what's needed, not the full dataframe.
-# ---------------------------------------------------------------------------
+# context builder - compact text summary of current app state to pass as context
 
 def build_context(top_n_df, seg_summary, rising_df, selected_states, selected_years_range):
-    """
-    Serialize the current filtered app state into a plain-text block
-    that Claude can reason over.
-
-    Parameters
-    ----------
-    top_n_df         : pd.DataFrame  Top ZIP codes by generosity or participation
-    seg_summary      : pd.DataFrame  K-Means cluster segment summary
-    rising_df        : pd.DataFrame  Donor momentum top ZIP codes
-    selected_states  : list[str]     Active state filter (empty = all states)
-    selected_years_range : list[int] Active year range
-    """
+    """serializes filtered app state into plain text for claude"""
     state_label = ", ".join(selected_states) if selected_states else "All States"
     year_label  = f"{min(selected_years_range)}–{max(selected_years_range)}"
 
@@ -59,8 +42,7 @@ def build_context(top_n_df, seg_summary, rising_df, selected_states, selected_ye
         lines.append(
             f"  {row['Segment']} | ZIP count: {int(row['ZIP_Codes']):,} | "
             f"Avg GI: {row['Avg_GI']:.2f}% | "
-            f"Avg PR: {row['Avg_PR']:.2f}% | "
-            f"Avg Income: ${row['Avg_Income']:,.0f}"
+            f"Avg PR: {row['Avg_PR']:.2f}%"
         )
 
     if not rising_df.empty:
@@ -75,35 +57,18 @@ def build_context(top_n_df, seg_summary, rising_df, selected_states, selected_ye
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# NATURAL LANGUAGE QUERY
-# Send a free-text question plus dataset context to Claude and return the answer.
-# ---------------------------------------------------------------------------
+# natural language query - sends question + dataset context to claude
 
 def ask_assistant(user_question, context_text, history=None):
-    """
-    Send a user question + dataset context to Claude and return the response text.
-    Optionally include prior conversation history for multi-turn support.
-
-    Parameters
-    ----------
-    user_question : str         The fundraiser's plain-English question
-    context_text  : str         Output of build_context()
-    history       : list | None Prior chat_messages dicts (role/content), excluding
-                                the current user message. Capped at last 10 entries.
-
-    Returns
-    -------
-    str  Claude's response
-    """
+    """sends user question + dataset context to claude, returns response - supports multi-turn history"""
     client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 
-    # Current turn always includes fresh dataset context
+    # include fresh dataset context each turn
     user_message = f"Here is the current dataset context:\n\n{context_text}\n\nQuestion: {user_question}"
 
     messages = []
     if history:
-        # Cap to last 10 messages to keep token usage manageable
+        # cap at last 10 messages to keep token usage manageable
         for m in history[-10:]:
             messages.append({"role": m["role"], "content": m["content"]})
     messages.append({"role": "user", "content": user_message})
@@ -117,24 +82,10 @@ def ask_assistant(user_question, context_text, history=None):
     return response.content[0].text
 
 
-# ---------------------------------------------------------------------------
-# ZIP REPORT GENERATOR
-# Generate a short strategic brief for a single target ZIP code.
-# ---------------------------------------------------------------------------
+# zip report generator - short strategic brief for single target zip
 
 def generate_zip_report(zip_row, context_text):
-    """
-    Generate a 3–5 sentence strategic brief for a specific ZIP code.
-
-    Parameters
-    ----------
-    zip_row      : pd.Series  A single row from top_n_df or target_df
-    context_text : str        Output of build_context() for broader context
-
-    Returns
-    -------
-    str  Claude's report text
-    """
+    """generates 3-5 sentence strategic brief for specific zip code"""
     client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 
     zip_detail = (
