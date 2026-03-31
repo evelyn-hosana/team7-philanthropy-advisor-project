@@ -13,3 +13,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Secrets — never commit API keys
+.streamlit/secrets.toml
