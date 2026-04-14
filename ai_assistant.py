@@ -74,7 +74,7 @@ def ask_assistant(user_question, context_text, history=None):
     messages.append({"role": "user", "content": user_message})
 
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-haiku-4-5-20251001",
         max_tokens=1024,
         system=SYSTEM_PROMPT,
         messages=messages
@@ -106,7 +106,7 @@ def generate_zip_report(zip_row, context_text):
     )
 
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-haiku-4-5-20251001",
         max_tokens=512,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": prompt}]
