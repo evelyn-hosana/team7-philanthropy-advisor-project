@@ -576,6 +576,66 @@ elif selected_phase == "Phase 2":
     ).properties(height=450).configure(background=chart_bg)
 
     st.altair_chart(cluster_chart, width='stretch', theme=None)
+        st.subheader("AI ZIP Brief Generator")
+    st.caption("Pick one ZIP code and generate a short fundraising brief for outreach.")
+
+    brief_source = df[df['year'] == display_year].copy() if len(selected_years_range) > 1 else df.copy()
+    brief_source = brief_source[brief_source['N1'] >= min_filers].dropna(
+        subset=['zipcode', 'STATE', 'generosity_index', 'participation_rate', 'N19700', 'A00100', 'N1']
+    )
+
+    if brief_source.empty:
+        st.info("No ZIP codes available for brief generation under current filters.")
+    else:
+        brief_options = brief_source.sort_values('generosity_index', ascending=False).copy()
+        brief_options["zip_label"] = brief_options.apply(
+            lambda r: f"{r['zipcode']} ({r['STATE']}) | GI {r['generosity_index']:.2%} | PR {r['participation_rate']:.2%}",
+            axis=1
+        )
+
+        selected_zip_label = st.selectbox(
+            "Choose a ZIP code",
+            brief_options["zip_label"].tolist(),
+            key="zip_brief_select"
+        )
+
+        if st.button("Generate ZIP Brief", key="zip_brief_btn"):
+            selected_zip_row = brief_options.loc[
+                brief_options["zip_label"] == selected_zip_label
+            ].iloc[0]
+
+            seg_summary = cluster_input.groupby('cluster_label', as_index=False).agg(
+                ZIP_Codes=('zipcode', 'count'),
+                Avg_GI=('generosity_index', 'mean'),
+                Avg_PR=('participation_rate', 'mean')
+            ).rename(columns={'cluster_label': 'Segment'})
+
+            if len(selected_years_range) >= 2:
+                rising_df = momentum_base[momentum_base['momentum'] > 0].copy()
+                rising_df = rising_df.merge(
+                    brief_source[['zipcode', 'generosity_index']].drop_duplicates('zipcode'),
+                    on='zipcode',
+                    how='left'
+                )
+                rising_df = rising_df.rename(columns={'momentum': 'momentum_score'})
+                rising_df = rising_df.sort_values('momentum_score', ascending=False)
+            else:
+                rising_df = pd.DataFrame()
+
+            glb_top = brief_source.nlargest(20, 'generosity_index')
+            ctx = ai_assistant.build_context(
+                glb_top,
+                seg_summary,
+                rising_df,
+                selected_states,
+                selected_years_range
+            )
+
+            try:
+                zip_brief = ai_assistant.generate_zip_report(selected_zip_row, ctx)
+                st.markdown(zip_brief)
+            except Exception as e:
+                st.error(f"ZIP Brief Error: {e}")
 
     # cluster legend with descriptions
     st.markdown("**Cluster Descriptions**")
