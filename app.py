@@ -576,7 +576,7 @@ elif selected_phase == "Phase 2":
     ).properties(height=450).configure(background=chart_bg)
 
     st.altair_chart(cluster_chart, width='stretch', theme=None)
-        st.subheader("AI ZIP Brief Generator")
+    st.subheader("AI ZIP Brief Generator")
     st.caption("Pick one ZIP code and generate a short fundraising brief for outreach.")
 
     brief_source = df[df['year'] == display_year].copy() if len(selected_years_range) > 1 else df.copy()
