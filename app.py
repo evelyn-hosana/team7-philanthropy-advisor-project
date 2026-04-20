@@ -668,7 +668,7 @@ else:
         except Exception as e:
             st.error(f"ZIP Brief Error: {e}")
 
-st.markdown("**Cluster Descriptions**")
+
 
 
 elif selected_phase == "Additional Insights":
