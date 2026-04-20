@@ -590,7 +590,7 @@ elif selected_phase == "Phase 2":
             f"<strong>{label}</strong><br><span style='font-size:0.82rem'>{desc}</span></div>",
             unsafe_allow_html=True
         )
-          st.altair_chart(cluster_chart, width='stretch', theme=None)
+    st.altair_chart(cluster_chart, width='stretch', theme=None)
     
 
     # cluster legend with descriptions
