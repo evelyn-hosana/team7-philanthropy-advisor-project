@@ -8,6 +8,16 @@
 - **Participation Rate** = `N19700 ÷ N1` (Itemizing Donors / Total Returns)
 
 ---
+## App Deployment URL
+[Open the Streamlit App](https://philanthropy-advisors-project.streamlit.app/)
+
+## Local Setup Instructions
+```bash
+git clone https://github.com/evelyn-hosana/team7-philanthropy-advisor-project.git
+cd team7-philanthropy-advisor-project
+uv sync
+uv run streamlit run app.py
+````
 
 ## Setup
 
@@ -66,6 +76,7 @@ Outputs `data/zpallagi_cleaned.csv`.
 ```bash
 uv run streamlit run app.py
 ```
+
 
 ---
 
