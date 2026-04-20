@@ -132,7 +132,7 @@ default_avg_part = default_df['participation_rate'].mean()
 avg_df = pd.DataFrame({'generosity_index': [avg_gen], 'participation_rate': [avg_part], 'avg_gen': [avg_gen]})
 
 
-st.title("Philanthropy Advisor Project")
+st.title("Generosity Intelligence Dashboard")
 
 if 'ai_messages' not in st.session_state:
     st.session_state.ai_messages = []
