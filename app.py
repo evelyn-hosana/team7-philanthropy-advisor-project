@@ -788,7 +788,7 @@ elif selected_phase == "Additional Insights":
             tcja_rect = alt.Chart(pd.DataFrame({'start': [2017], 'end': [2018]})).mark_rect(
                 color='#4b5563', opacity=0.3
             ).encode(x='start:Q', x2='end:Q')
-            tcja_label = alt.Chart(pd.DataFrame
+            tcja_label = alt.Chart(pd.DataFrame)
 
 
 
