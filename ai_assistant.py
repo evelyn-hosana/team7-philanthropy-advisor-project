@@ -41,8 +41,8 @@ def build_context(top_n_df, seg_summary, rising_df, selected_states, selected_ye
     for _, row in seg_summary.iterrows():
         lines.append(
             f"  {row['Segment']} | ZIP count: {int(row['ZIP_Codes']):,} | "
-            f"Avg GI: {row['Avg_GI']:.2f}% | "
-            f"Avg PR: {row['Avg_PR']:.2f}%"
+            f"Avg GI: {row['Avg_GI']:.2%} | "
+            f"Avg PR: {row['Avg_PR']:.2%}"
         )
 
     if not rising_df.empty:
@@ -75,7 +75,7 @@ def ask_assistant(user_question, context_text, history=None):
 
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
+        max_tokens=2048,
         system=SYSTEM_PROMPT,
         messages=messages
     )

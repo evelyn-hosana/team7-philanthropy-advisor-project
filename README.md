@@ -1,23 +1,25 @@
 # Generosity Intelligence Dashboard
 
-**Role:** Fundraising Strategists for a National Charity
-**Goal:** Identify ZIP codes where residents give the highest share of income to charity — finding *genuinely generous* communities, not just wealthy ones.
+## Project Description
 
-**Core Metrics (calculated from IRS SOI data):**
-- **Generosity Index** = `A19700 ÷ A00100` (Charitable Contributions / Adjusted Gross Income (AGI))
-- **Participation Rate** = `N19700 ÷ N1` (Itemizing Donors / Total Returns)
+A Streamlit dashboard built for a national charity planning a fundraising gala. It analyzes IRS ZIP code tax data to identify communities where residents give the highest share of their income to charity — the goal being to find genuinely generous ZIP codes, not just wealthy ones.
 
----
+The two core metrics are:
+- Generosity Index = `A19700 / A00100` (Charitable Contributions / AGI)
+- Participation Rate = `N19700 / N1` (Itemizing Donors / Total Returns)
+
 ## App Deployment URL
-[Open the Streamlit App](https://philanthropy-advisors-project.streamlit.app/)
+
+https://philanthropy-advisors-project.streamlit.app/
 
 ## Local Setup Instructions
+
 ```bash
 git clone https://github.com/evelyn-hosana/team7-philanthropy-advisor-project.git
 cd team7-philanthropy-advisor-project
 uv sync
 uv run streamlit run app.py
-````
+```
 
 ## Setup
 
@@ -25,11 +27,11 @@ This project uses [`uv`](https://astral.sh/uv), which manages dependencies and c
 
 ### 1. Install `uv`
 
-**macOS/Linux:**
+macOS/Linux:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-**Windows:**
+Windows:
 ```powershell
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
@@ -40,20 +42,18 @@ uv sync
 ```
 This creates `.venv/` and installs all locked dependencies. All subsequent commands run inside this venv via `uv run`.
 
----
-
 ## Data
 
-If `data/zpallagi_cleaned.csv` does not exist, you must download the original IRS datasets and generate it.
+If `data/zpallagi_cleaned.csv` does not exist, you must download the original IRS datasets (from years 2007, 2009-2011, 2013-2014, 2016-2020, and 2022) and generate it.
 
-### Download original data
+### Download original data (optional, unless cleaned dataset doesn't exist)
 
-Download the **ZIP Code Data (with AGI)** files from the IRS SOI page:
+Download the ZIP Code Data (with AGI) files from the IRS SOI page:
 https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-statistics-zip-code-data-soi
 
-**CSV years (2011–2022):** Place files directly in `data/original/` using the naming convention `YYzpallagi.csv` (e.g., `22zpallagi.csv`).
+CSV years (2011–2022): Place files directly in `data/original/` using the naming convention `YYzpallagi.csv` (e.g., `22zpallagi.csv`).
 
-**Legacy XLS years (2007, 2009, 2010):** Place per-state XLS files in:
+Legacy XLS years (2007, 2009, 2010): Place per-state XLS files in:
 ```
 data/original/convertXLSData/2007zipcode/
 data/original/convertXLSData/2009zipcode/
@@ -70,23 +70,18 @@ uv run python data_processing.py
 ```
 Outputs `data/zpallagi_cleaned.csv`.
 
----
-
 ## Run the Dashboard
 ```bash
 uv run streamlit run app.py
 ```
 
-
----
-
 ## Dashboard Features
 
-- **Global filters:** Year(s) and state(s) with TCJA cross-era warning (2017–2018 boundary)
-- **Top N ZIP codes** ranked by Generosity Index or Participation Rate
-- **Scatter plot** with quadrant overlays and user-defined thresholds
-- **US state map** colored by generosity or participation
-- **Heatmap** of AGI vs. charitable contributions distribution
-- **Trend charts** by year and state
+- Global filters: year(s) and state(s), with a warning when the selected range crosses the 2017 TCJA boundary
+- Top N ZIP codes ranked by Generosity Index or Participation Rate
+- Scatter plot with quadrant overlays and user-defined thresholds
+- US state map colored by generosity or participation
+- Trend charts by year and state
+- AI advisor chat and per-ZIP fundraising brief generator
 
-**Data caveats shown in-app:** Itemization bias (only itemizers report contributions), the 2017 TCJA structural break, and nominal (non-inflation-adjusted) dollar values.
+Note: the app surfaces data caveats inline — itemization bias, the 2017 TCJA structural break, and the fact that dollar values are nominal.

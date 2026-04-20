@@ -73,8 +73,9 @@ if 'year_filter' not in st.session_state:
     st.session_state['year_filter'] = [max(all_years)]
 
 cy1, cy2 = st.sidebar.columns([1, 1.8])
-cy1.markdown("<div style='margin-top: 5px;'>Select Year:</div><p style='font-size: 0.7rem; color: gray; margin-top: -5px;'>All Selected Clears</p>", unsafe_allow_html=True)
+cy1.markdown("<div style='margin-top: 5px;'>Select Year:</div>", unsafe_allow_html=True)
 selected_option = cy2.multiselect("Select Year:", options=year_options, key='year_filter', on_change=handle_year_selection, label_visibility="collapsed")
+st.sidebar.markdown("<p style='font-size: 0.75rem; color: gray; margin-top: -8px;'>Select one year for a snapshot. Select two (or more) years to analyze range. Selecting 'All Available Years' resets dropdown and uses full range dataset.</p>", unsafe_allow_html=True)
 
 all_states = sorted(full_df['STATE'].unique())
 cs1, cs2 = st.sidebar.columns([1, 1.8])
@@ -436,9 +437,8 @@ elif selected_phase == "Phase 2":
 - **Generosity Index (GI)** = A19700 / A00100
 - **Momentum** = end GI − start GI""")
 
-    if len(selected_years_range) < 2:
-        st.info("Select a range of two or more years in the sidebar to view the momentum chart.")
-    else:
+    st.caption("Requires a multi-year range — select two or more years in the sidebar (e.g. 2019 and 2022 shows the full 2019–2022 range).")
+    if len(selected_years_range) >= 2:
 
         gi_start = df[df['year'] == start_year][['zipcode', 'STATE', 'generosity_index']].rename(columns={'generosity_index': 'gi_start'})
         gi_end   = df[df['year'] == end_year  ][['zipcode', 'generosity_index']].rename(columns={'generosity_index': 'gi_end'})
@@ -488,6 +488,14 @@ elif selected_phase == "Phase 2":
 
         mom_chart = (bar_layer + dot_start + dot_end).properties(height=chart_height).configure(background=chart_bg)
         st.altair_chart(mom_chart, width='stretch', theme=None)
+        st.markdown(
+            f"<div style='font-size:0.82rem; color:#9ca3af; margin-top:-8px;'>"
+            f"<span style='color:#1e3a8a; font-size:1rem;'>&#9679;</span> {start_year} (start) &nbsp;&nbsp;"
+            f"<span style='color:#38bdf8; font-size:1rem;'>&#9679;</span> {end_year} (end) &nbsp;&nbsp;"
+            f"Bar direction shows change: right = growth, left = decline."
+            f"</div>",
+            unsafe_allow_html=True
+        )
 
     st.subheader("ZIP Code Cluster Analysis")
     with st.expander("How is this calculated?"):
@@ -590,21 +598,6 @@ elif selected_phase == "Phase 2":
             f"<strong>{label}</strong><br><span style='font-size:0.82rem'>{desc}</span></div>",
             unsafe_allow_html=True
         )
-    st.altair_chart(cluster_chart, width='stretch', theme=None)
-
-    # cluster legend with descriptions
-    st.markdown("**Cluster Descriptions**")
-    legend_cols = st.columns(k_clusters)
-    for i, col in enumerate(legend_cols):
-        label, desc = label_list[i]
-        color = all_cluster_colors[i]
-        text_color = '#111827' if color in ('#38bdf8', '#bae6fd') else '#ffffff'
-        col.markdown(
-            f"<div style='background:{color}; color:{text_color}; padding:10px 12px; border-radius:6px;'>"
-            f"<strong>{label}</strong><br><span style='font-size:0.82rem'>{desc}</span></div>",
-            unsafe_allow_html=True
-        )
-
     st.subheader("AI ZIP Brief Generator")
     st.caption("Pick one ZIP code and generate a short fundraising brief for outreach.")
 
@@ -666,129 +659,6 @@ elif selected_phase == "Phase 2":
             except Exception as e:
                 st.error(f"ZIP Brief Error: {e}")    
 
-
-
-
-elif selected_phase == "Additional Insights":
-    st.subheader("State Averages")
-    if len(selected_years_range) > 1:
-        st.caption(f"Showing data for **{display_year}** (last selected year).")
-    with st.expander("How is this calculated?"):
-        st.markdown("""State-level averages computed as the mean across all ZIP codes within each state.
-
-- **Generosity Index** = A19700 / A00100
-- **Participation Rate** = N19700 / N1""")
-
-    map_metric_map = {"Generosity": "Generosity Index", "Participation": "Participation Rate"}
-    map_metric = map_metric_map.get(selected_metric_label, "Generosity Index")
-
-    # setup map axes
-    if map_metric == 'Generosity Index':
-        metric_col, metric_title, map_colors = 'generosity_index', 'Avg Generosity', ['#e9d5ff', '#4c1d95']
-    else:
-        metric_col, metric_title, map_colors = 'participation_rate', 'Avg Participation', ['#fca5a5', '#7f1d1d']
-
-    # group state avgs - use single display year when multiple years selected
-    state_source = df[df['year'] == display_year] if len(selected_years_range) > 1 else df
-    state_avg = state_source.groupby('STATE', as_index=False)[['generosity_index', 'participation_rate']].mean().round(4)
-
-    # build fips dict
-    state_fips = {
-        'AL': 1, 'AK': 2, 'AZ': 4, 'AR': 5, 'CA': 6, 'CO': 8, 'CT': 9, 'DE': 10, 'FL': 12, 'GA': 13,
-        'HI': 15, 'ID': 16, 'IL': 17, 'IN': 18, 'IA': 19, 'KS': 20, 'KY': 21, 'LA': 22, 'ME': 23, 'MD': 24,
-        'MA': 25, 'MI': 26, 'MN': 27, 'MS': 28, 'MO': 29, 'MT': 30, 'NE': 31, 'NV': 32, 'NH': 33, 'NJ': 34,
-        'NM': 35, 'NY': 36, 'NC': 37, 'ND': 38, 'OH': 39, 'OK': 40, 'OR': 41, 'PA': 42, 'RI': 44, 'SC': 45,
-        'SD': 46, 'TN': 47, 'TX': 48, 'UT': 49, 'VT': 50, 'VA': 51, 'WA': 53, 'WV': 54, 'WI': 55, 'WY': 56,
-        'DC': 11
-    }
-    # assign map lookups
-    state_avg['id'] = state_avg['STATE'].map(state_fips)
-    state_avg = state_avg.dropna(subset=['id'])
-
-    # load map json
-    url = 'https://cdn.jsdelivr.net/npm/vega-datasets@v1.29.0/data/us-10m.json'
-    states = alt.topo_feature(url, 'states')
-
-    # map chart
-    chart_map = alt.Chart(states).mark_geoshape().encode(
-        color=alt.Color(f'{metric_col}:Q', scale=alt.Scale(range=map_colors), title=metric_title, legend=alt.Legend(labelColor=axis_color, titleColor=axis_color, format='.1%')),
-        tooltip=[
-            alt.Tooltip('STATE:N', title='State'),
-            alt.Tooltip(f'{metric_col}:Q', title=metric_title, format='.1%')
-        ]
-    ).transform_lookup(
-        lookup='id',
-        from_=alt.LookupData(state_avg, 'id', [metric_col, 'STATE'])
-    ).project('albersUsa').properties(height=500).configure(background=chart_bg)
-
-    # embed map
-    st.altair_chart(chart_map, width='stretch', theme=None)
-
-
-    col_dist, col_zip = st.columns(2)
-
-    with col_dist:
-        st.subheader("Generosity Distribution")
-        if len(selected_years_range) > 1:
-            st.caption(f"Showing data for **{display_year}** (last selected year).")
-        with st.expander("How is this calculated?"):
-            st.markdown("""Histogram of **Generosity Index** across all selected ZIP codes.
-
-- **Generosity Index** = A19700 / A00100""")
-
-        hist_source = df[df['year'] == display_year] if len(selected_years_range) > 1 else df
-        # histogram
-        chart3 = alt.Chart(hist_source).mark_bar().encode(
-            x=alt.X('generosity_index:Q', bin=alt.Bin(maxbins=hist_bins), title='Generosity Index (%)', axis=alt.Axis(labelColor=axis_color, titleColor=axis_color, labelExpr="format(datum.value * 100, '.0f')")),
-            y=alt.Y('count()', title='Number of ZIP Codes', axis=alt.Axis(labelColor=axis_color, titleColor=axis_color)),
-            color=alt.Color('count()', scale=THEME_PALETTE, title='Count of ZIP Codes', legend=None),
-            tooltip=[alt.Tooltip('count()', title='Count')]
-        ).properties(height=400)
-
-        # overlay histogram
-        rule_hist = alt.Chart(avg_df).mark_rule(color='red', strokeDash=[5, 5]).encode(x='avg_gen:Q')
-        layered_hist = (chart3 + rule_hist).configure(background=chart_bg)
-        st.altair_chart(layered_hist, width='stretch', theme=None)
-
-    with col_zip:
-        st.subheader("Reportable Giving ZIP Codes by Year")
-        with st.expander("How is this calculated?"):
-            st.markdown("""Count of ZIP codes per tax year where:
-
-- A19700 > 0
-- N1 >= 100""")
-        if len(selected_years_range) < 2:
-            st.info("Select a range of two or more years in the sidebar to view the trend chart.")
-
-        # load full unfiltered dataset - year/state filters would distort this trend
-        @st.cache_data
-        def get_zip_counts(data):
-            return data.groupby('year', as_index=False).size().rename(columns={'size': 'zip_count'})
-
-        zip_counts = get_zip_counts(full_df)
-        # filter to dynamic global year range
-        zip_counts = zip_counts[zip_counts['year'].isin(selected_years_range)].copy()
-
-        # era column so line breaks over 2017-2018 tcja gap
-        zip_counts['era'] = zip_counts['year'].apply(lambda y: 'pre' if y <= 2017 else 'post')
-
-        chart_floor = alt.Chart(zip_counts).mark_line(point=alt.OverlayMarkDef(opacity=1), color='#38bdf8').encode(
-            x=alt.X('year:Q', title='Tax Year', scale=alt.Scale(domain=[min_year, max_year], zero=False, nice=False), axis=alt.Axis(format='d', tickMinStep=1, labelColor=axis_color, titleColor=axis_color)),
-            y=alt.Y('zip_count:Q', title='ZIP Codes with Reportable Giving', axis=alt.Axis(labelColor=axis_color, titleColor=axis_color)),
-            detail='era:N',
-            tooltip=[
-                alt.Tooltip('year:Q', title='Year'),
-                alt.Tooltip('zip_count:Q', title='ZIP Count', format=',')
-            ]
-        ).properties(height=350)
-
-        max_y = zip_counts['zip_count'].max() if not zip_counts.empty else 1000
-
-        if spans_tcja:
-            tcja_rect = alt.Chart(pd.DataFrame({'start': [2017], 'end': [2018]})).mark_rect(
-                color='#4b5563', opacity=0.3
-            ).encode(x='start:Q', x2='end:Q')
-            tcja_label = alt.Chart(pd.DataFrame)
 
 
 
