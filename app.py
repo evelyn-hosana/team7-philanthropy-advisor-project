@@ -1,5 +1,6 @@
 import streamlit as st
 import ai_assistant
+import anomaly_detection
 
 import pandas as pd
 import altair as alt
@@ -19,6 +20,11 @@ def load_data(filepath='data/zpallagi_cleaned.csv'):
     df = pd.read_csv(filepath, dtype={'zipcode': str})
     df['year'] = df['year'].astype(int)
     return df
+
+# detect anomalies in full dataset
+@st.cache_data
+def compute_anomalies(df):
+    return anomaly_detection.detect_all_anomalies(df.copy())
 
 # setup titles
 
@@ -598,6 +604,162 @@ elif selected_phase == "Phase 2":
             f"<strong>{label}</strong><br><span style='font-size:0.82rem'>{desc}</span></div>",
             unsafe_allow_html=True
         )
+
+    # ANOMALY DETECTION SECTION
+    st.markdown("---")
+    st.subheader("🔍 Anomaly Detection - Irregular Giving Patterns")
+    with st.expander("What are anomalies? How are they detected?"):
+        st.markdown("""
+        **Anomalies** are ZIP codes with unusual charitable giving patterns:
+
+        - **Community Driven**: Areas where strong community culture drives unexpectedly high generosity
+        - **Rising Stars**: ZIP codes showing consistent upward trends in giving
+        - **Declining**: ZIP codes showing consistent downward trends in giving
+        - **Wealth Issues**: Concentration risk and non-itemizer dominated areas
+        - **Peer Outliers**: Communities outperforming/underperforming similar areas
+        - **Lifecycle Patterns**: Emerging prosperity, young professionals, mature givers
+        """)
+
+    # Compute anomalies lazily on the display-year slice only (fast, cached)
+    raw_anomaly_input = df[df['year'] == display_year].copy() if len(selected_years_range) > 1 else df.copy()
+    with st.spinner(f"Running anomaly detection for {display_year}…"):
+        display_anomaly_df = compute_anomalies(raw_anomaly_input)
+
+    all_anomalies_df = display_anomaly_df[display_anomaly_df['is_any_anomaly'] == True].copy()
+    all_anomalies_df = all_anomalies_df.dropna(subset=['anomaly_score']).sort_values('anomaly_score', ascending=False)
+    
+    if all_anomalies_df.empty:
+        st.info("No anomalies detected for current year selection.")
+    else:
+        st.write(f"### 📊 Detected {len(all_anomalies_df)} anomalies across selected periods")
+        
+        # Create comprehensive visualization
+        st.markdown("#### Anomaly Landscape Visualization")
+        
+        # Prepare data for visualization
+        viz_df = all_anomalies_df[['zipcode', 'STATE', 'generosity_index', 'participation_rate', 
+                                    'A00100', 'N1', 'anomaly_category', 'anomaly_score', 'fundraising_priority_score']].copy()
+        viz_df = viz_df.dropna(subset=['generosity_index', 'participation_rate'])
+        
+        # Create scatter plot: Generosity vs Participation, colored by anomaly category, sized by AGI
+        color_map = {
+            'Community Driven': '#8b5cf6',
+            'Hidden Gem Community': '#06b6d4',
+            'Philanthropic Powerhouse': '#10b981',
+            'Wealth Concentration Zone': '#f97316',
+        }
+        
+        viz_df['category_color'] = viz_df['anomaly_category'].map(color_map).fillna('#6b7280')
+        
+        scatter = alt.Chart(viz_df).mark_circle(opacity=0.7, size=100).encode(
+            x=alt.X('participation_rate:Q', title='Participation Rate (%)',
+                    scale=alt.Scale(domain=[0, 1]),
+                    axis=alt.Axis(labelColor=axis_color, titleColor=axis_color, labelExpr="format(datum.value * 100, '.0f')")),
+            y=alt.Y('generosity_index:Q', title='Generosity Index (%)',
+                    scale=alt.Scale(domain=[0, viz_df['generosity_index'].quantile(0.99) * 1.1]),
+                    axis=alt.Axis(labelColor=axis_color, titleColor=axis_color, labelExpr="format(datum.value * 100, '.2f')")),
+            size=alt.Size('A00100:Q', title='Total AGI ($k)', scale=alt.Scale(range=[50, 400])),
+            color=alt.Color('anomaly_category:N', scale=alt.Scale(domain=list(color_map.keys()), range=list(color_map.values())),
+                           title='Anomaly Category', legend=alt.Legend(labelColor=axis_color, titleColor=axis_color)),
+            tooltip=[
+                alt.Tooltip('zipcode:N', title='ZIP Code'),
+                alt.Tooltip('STATE:N', title='State'),
+                alt.Tooltip('generosity_index:Q', title='Generosity Index', format='.2%'),
+                alt.Tooltip('participation_rate:Q', title='Participation Rate', format='.2%'),
+                alt.Tooltip('A00100:Q', title='Total AGI ($k)', format=',.0f'),
+                alt.Tooltip('N1:Q', title='Total Filers', format=',.0f'),
+                alt.Tooltip('anomaly_score:Q', title='Anomaly Score', format='.3f'),
+                alt.Tooltip('anomaly_category:N', title='Category'),
+            ]
+        ).properties(height=500, width=900).interactive().configure(background=chart_bg)
+        
+        st.altair_chart(scatter, use_container_width=True)
+        
+        # Group anomalies by category
+        st.markdown("#### Anomalies by Category")
+        
+        category_groups = all_anomalies_df.groupby('anomaly_category')
+        
+        for category, group in category_groups:
+            with st.expander(f"**{category}** — Top 5 of {len(group)} detected", expanded=False):
+                # Summary stats for category
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric("Count", len(group))
+                col2.metric("Avg Generosity", f"{group['generosity_index'].mean():.2%}")
+                col3.metric("Avg Participation", f"{group['participation_rate'].mean():.2%}")
+                col4.metric("Avg AGI", f"${group['A00100'].mean():,.0f}k")
+                
+                st.divider()
+                
+                # Show only top 5 highest-confidence anomalies per category
+                st.write("**Top 5 ZIP Codes by Anomaly Score:**")
+
+                zips_in_category = group.sort_values('anomaly_score', ascending=False).head(5)
+
+                for idx, (_, zip_row) in enumerate(zips_in_category.iterrows()):
+                    with st.container(border=True):
+                        col_zip, col_score, col_gi, col_pr = st.columns([1, 1, 1, 1])
+                        
+                        with col_zip:
+                            st.write(f"**{zip_row['zipcode']} ({zip_row['STATE']})**")
+                        
+                        with col_score:
+                            st.metric("Score", f"{zip_row['anomaly_score']:.3f}")
+                        
+                        with col_gi:
+                            st.metric("GI", f"{zip_row['generosity_index']:.2%}")
+                        
+                        with col_pr:
+                            st.metric("PR", f"{zip_row['participation_rate']:.2%}")
+                        
+                        # Show explanation when expanded
+                        if st.button(f"📋 Why is {zip_row['zipcode']} anomalous?", key=f"explain_{zip_row['zipcode']}_{category}"):
+                            anom_detail = anomaly_detection.get_anomaly_detail(display_anomaly_df, str(zip_row['zipcode']), str(zip_row['STATE']))
+                            
+                            st.markdown(f"##### Why {zip_row['zipcode']} is Flagged as {category}")
+                            
+                            # Key metrics
+                            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+                            metric_col1.metric("Total AGI", f"${zip_row['A00100']:,.0f}k")
+                            metric_col2.metric("Total Filers", f"{int(zip_row['N1']):,}")
+                            metric_col3.metric("Itemizing Donors", f"{int(zip_row['N19700']):,}")
+                            metric_col4.metric("Priority Score", f"{zip_row.get('fundraising_priority_score', 0):.0f}/100")
+                            
+                            st.divider()
+                            
+                            # Why it's unusual
+                            st.markdown("**Real-World Interpretation:**")
+                            st.info(anom_detail.get('real_world_reason', 'Pattern analysis pending'))
+                            
+                            # Anomaly details
+                            if anom_detail.get('anomaly_types'):
+                                st.markdown(f"**Detected Patterns:** {', '.join(anom_detail['anomaly_types'])}")
+                            
+                            # State rankings
+                            st.markdown("**State Performance Ranking:**")
+                            rank_col1, rank_col2, rank_col3 = st.columns(3)
+                            rank_col1.metric("GI Rank", anom_detail['state_ranking']['generosity_percentile'])
+                            rank_col2.metric("PR Rank", anom_detail['state_ranking']['participation_percentile'])
+                            rank_col3.metric("Wealth Rank", anom_detail['state_ranking']['wealth_percentile'])
+                            
+                            # Fundraising strategy
+                            st.markdown("**Recommended Strategy:**")
+                            if anom_detail.get('strategy'):
+                                for strategy_point in anom_detail['strategy']:
+                                    st.write(f"• {strategy_point}")
+                            
+                            # Similar ZIPs
+                            st.markdown("**Peer ZIP Codes (for comparison):**")
+                            similar_zips = anomaly_detection.get_similar_zips(display_anomaly_df, str(zip_row['zipcode']), str(zip_row['STATE']), n=3)
+                            if not similar_zips.empty:
+                                similar_display = similar_zips.copy()
+                                similar_display.columns = ['ZIP', 'State', 'GI %', 'PR %', 'AGI ($k)', 'Distance']
+                                similar_display['GI %'] = (similar_display['GI %'] * 100).round(2)
+                                similar_display['PR %'] = (similar_display['PR %'] * 100).round(2)
+                                similar_display['AGI ($k)'] = similar_display['AGI ($k)'].round(0)
+                                similar_display['Distance'] = similar_display['Distance'].round(3)
+                                st.dataframe(similar_display, hide_index=True, use_container_width=True)
+    
     st.subheader("AI ZIP Brief Generator")
     st.caption("Pick one ZIP code and generate a short fundraising brief for outreach.")
 
