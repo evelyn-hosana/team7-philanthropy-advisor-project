@@ -370,7 +370,7 @@ Bubble size = sum(N1)""")
     target_avg_part = target_df['participation_rate'].mean() if target_count > 0 else 0
 
     col_m1, col_m2, col_m3 = st.columns(3)
-    col_m1.metric("Targeted ZIP-Years", f"{target_count:,}")
+    col_m1.metric("Targeted ZIP Codes", f"{target_count:,}")
     col_m2.metric("Target Avg Generosity", f"{target_avg_gen:.2%}")
     col_m3.metric("Target Avg Participation", f"{target_avg_part:.2%}")
 
