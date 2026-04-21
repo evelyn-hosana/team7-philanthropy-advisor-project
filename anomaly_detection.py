@@ -352,59 +352,59 @@ def compute_anomaly_metadata(df: pd.DataFrame) -> pd.DataFrame:
         
         # Primary category interpretation
         if 'Community Driven' in category:
-            hints.append('🏘️ Strong community-driven giving culture')
+            hints.append('Strong community-driven giving culture')
             hints.append('High participation + generosity = engaged community')
             hints.append('Strategy: Broaden donor base, community partnership programs')
-        
+
         elif 'Hidden Gem Community' in category:
-            hints.append('💎 Exceptional generosity despite modest income')
+            hints.append('Exceptional generosity despite modest income')
             hints.append('Strong giving culture, untapped potential')
             hints.append('Strategy: Increase visibility, showcase impact stories')
-        
+
         elif 'Philanthropic Powerhouse' in category:
-            hints.append('🚀 Highest-tier prospect ZIP code')
+            hints.append('Highest-tier prospect ZIP code')
             hints.append('Wealthy + generous + broad participation')
             hints.append('Strategy: Premium gala targets, major gift focus')
-        
+
         elif 'Affluent Underperformers' in category:
-            hints.append('🎯 MAJOR OPPORTUNITY: Wealthy but low giving')
+            hints.append('MAJOR OPPORTUNITY: Wealthy but low giving')
             hints.append('Strong cultivation potential, capacity gap')
             hints.append('Strategy: Focus on wealth + engagement initiatives')
-        
+
         elif 'Wealth Concentration Zone' in category:
-            hints.append('📊 Many residents but modest giving patterns')
+            hints.append('Many residents but modest giving patterns')
             hints.append('Possible non-itemizer effect or transient population')
             hints.append('Strategy: Community events, grassroots engagement')
-        
+
         # Lifecycle indicators
         if 'Emerging Prosperity Zone' in lifecycle:
-            hints.append('📈 Growing wealth + increasing generosity = rising star')
-        
+            hints.append('Growing wealth + increasing generosity = rising star')
+
         elif 'Young Professional Zone' in lifecycle:
-            hints.append('👨‍💼 Entry-level earners, future major donor pipeline')
+            hints.append('Entry-level earners, future major donor pipeline')
             hints.append('Build loyalty early, expect growing capacity')
-        
+
         elif 'Mature Philanthropic Core' in lifecycle:
-            hints.append('🏆 Established donors, stable giving')
+            hints.append('Established donors, stable giving')
             hints.append('Sustainer focus, legacy planning opportunities')
-        
+
         elif 'Declining Community' in lifecycle:
-            hints.append('⚠️ Economic/demographic headwinds')
+            hints.append('Economic/demographic headwinds')
             hints.append('Track causes: job loss, aging out, migration')
-        
+
         # Peer performance
         if 'Peer Group Star' in peer_cat:
-            hints.append('⭐ Outperforms similar communities significantly')
-        
+            hints.append('Outperforms similar communities significantly')
+
         elif 'Peer Group Laggard' in peer_cat:
-            hints.append('❌ Underperforms similar communities')
-        
+            hints.append('Underperforms similar communities')
+
         # Wealth structure
         if 'Concentration Risk' in wealth_cat:
-            hints.append('⚠️ Few ultra-wealthy, donor diversification needed')
-        
+            hints.append('Few ultra-wealthy, donor diversification needed')
+
         elif 'Non-Itemizer Dominated' in wealth_cat:
-            hints.append('📋 Few itemizers, many standard deduction filers')
+            hints.append('Few itemizers, many standard deduction filers')
         
         return ' | '.join(hints[:4]) if hints else 'Real-world pattern pending analysis'
     
@@ -597,34 +597,34 @@ def get_anomaly_detail(df: pd.DataFrame, zipcode: str, state: str, full_df: pd.D
     category = row.get('anomaly_category', '')
     
     if 'Philanthropic Powerhouse' in category:
-        strategy.append('🎯 Primary strategy: Premium gala VIP targeting')
-        strategy.append('💰 Approach: Major gift proposal with customized impact')
-        strategy.append('🤝 Tactic: C-suite relationship building')
-    
+        strategy.append('Primary strategy: Premium gala VIP targeting')
+        strategy.append('Approach: Major gift proposal with customized impact')
+        strategy.append('Tactic: C-suite relationship building')
+
     elif 'Affluent Underperformers' in category:
-        strategy.append('🎯 Primary strategy: Wealth cultivation initiative')
-        strategy.append('💰 Approach: Demonstrate impact to build engagement')
-        strategy.append('🤝 Tactic: Small group briefings with board members')
-    
+        strategy.append('Primary strategy: Wealth cultivation initiative')
+        strategy.append('Approach: Demonstrate impact to build engagement')
+        strategy.append('Tactic: Small group briefings with board members')
+
     elif 'Community Driven' in category:
-        strategy.append('🎯 Primary strategy: Community partnership programs')
-        strategy.append('💰 Approach: Align with local community values & missions')
-        strategy.append('🤝 Tactic: Grassroots engagement, community events')
-    
+        strategy.append('Primary strategy: Community partnership programs')
+        strategy.append('Approach: Align with local community values & missions')
+        strategy.append('Tactic: Grassroots engagement, community events')
+
     elif 'Hidden Gem Community' in category:
-        strategy.append('🎯 Primary strategy: Visibility & engagement campaigns')
-        strategy.append('💰 Approach: Showcase impact stories from similar communities')
-        strategy.append('🤝 Tactic: Social media spotlights, volunteer opportunities')
-    
+        strategy.append('Primary strategy: Visibility & engagement campaigns')
+        strategy.append('Approach: Showcase impact stories from similar communities')
+        strategy.append('Tactic: Social media spotlights, volunteer opportunities')
+
     elif 'Young Professional Zone' in analysis['lifecycle']:
-        strategy.append('🎯 Primary strategy: Build loyalty early')
-        strategy.append('💰 Approach: Entry-level giving programs, future stewardship')
-        strategy.append('🤝 Tactic: Young professional networks, corporate partnerships')
-    
+        strategy.append('Primary strategy: Build loyalty early')
+        strategy.append('Approach: Entry-level giving programs, future stewardship')
+        strategy.append('Tactic: Young professional networks, corporate partnerships')
+
     elif 'Declining Community' in analysis['lifecycle']:
-        strategy.append('⚠️ Primary strategy: Investigate root cause')
-        strategy.append('💰 Approach: Address economic headwinds')
-        strategy.append('🤝 Tactic: Community economic development alignment')
+        strategy.append('Primary strategy: Investigate root cause')
+        strategy.append('Approach: Address economic headwinds')
+        strategy.append('Tactic: Community economic development alignment')
     
     analysis['strategy'] = strategy
     
