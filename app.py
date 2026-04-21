@@ -382,10 +382,12 @@ Bubble size = sum(N1)""")
         ('count()', 'Number of ZIP Codes', None)
     ])
 
-    # avg lines (static global references)
-    avg_df = pd.DataFrame({'generosity_index': [avg_gen], 'participation_rate': [avg_part]})
-    rule_x = alt.Chart(avg_df).mark_rule(color='red', strokeDash=[5, 5]).encode(x='participation_rate:Q')
-    rule_y = alt.Chart(avg_df).mark_rule(color='red', strokeDash=[5, 5]).encode(y='generosity_index:Q')
+    # avg lines filtered to display year (matches scatter_source)
+    scatter_avg_gen = scatter_source['generosity_index'].mean() if not scatter_source.empty else 0
+    scatter_avg_part = scatter_source['participation_rate'].mean() if not scatter_source.empty else 0
+    scatter_avg_df = pd.DataFrame({'generosity_index': [scatter_avg_gen], 'participation_rate': [scatter_avg_part]})
+    rule_x = alt.Chart(scatter_avg_df).mark_rule(color='red', strokeDash=[5, 5]).encode(x='participation_rate:Q')
+    rule_y = alt.Chart(scatter_avg_df).mark_rule(color='red', strokeDash=[5, 5]).encode(y='generosity_index:Q')
 
     # target tracking lines (dynamic user input)
     target_lines_df = pd.DataFrame({'generosity_index': [min_gen], 'participation_rate': [min_part]})
